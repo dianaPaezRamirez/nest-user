@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { last } from 'rxjs';
 
 @Controller('user')
 export class UserController {
@@ -31,7 +32,25 @@ export class UserController {
   @Get(':id')
   @ApiOperation({ summary: 'Get one' })
   async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+    const userFounded= await this.userService.findOne(id)
+    return  {
+      statusCode: 200,
+      message: 'Usuario encontrado',
+      data: {
+        id: userFounded?.id,
+        name: userFounded?.name,
+        lastName: userFounded?.lastName,
+        contactPhone: userFounded?.contactPhone,
+        roles: userFounded?.roles,
+        skills: userFounded?.skills,
+        experience: userFounded?.experience,
+        ratings: userFounded?.ratings,
+        educations: userFounded?.educations,
+        avatar: userFounded?.avatar,
+        email: userFounded?.email,
+        categories: userFounded?.categories.map(uc => uc.category), // 🔹 Extraer solo las categorías
+      },
+    };;
   }
 
   @Patch(':id')
