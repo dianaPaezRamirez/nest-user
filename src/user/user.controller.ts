@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { last } from 'rxjs';
+import { bcryptPasswordd } from './pipe/bcrypt-password.pipe';
+
 
 @Controller('user')
 export class UserController {
@@ -11,7 +12,7 @@ export class UserController {
 
   @Post()
   @ApiOperation({ summary: 'Create user' })
-  async create(@Body() createUser: CreateUserDto) {
+  async create(@Body(bcryptPasswordd) createUser: CreateUserDto) {
     return this.userService.create(createUser);
   }
 
@@ -50,13 +51,33 @@ export class UserController {
         email: userFounded?.email,
         categories: userFounded?.categories.map(uc => uc.category), // 🔹 Extraer solo las categorías
       },
-    };;
+    };
   }
+
+  
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update one' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  async update(@Param('id') id: string, @Body(bcryptPasswordd) updateUserDto: UpdateUserDto) {
+    const userUpdated= await this.userService.update(id, updateUserDto)
+    return {
+      statusCode: 200,
+      message: 'Usuario actualizado',
+      data:{
+        id: userUpdated?.id,
+        name: userUpdated?.name,
+        lastName: userUpdated?.lastName,
+        contactPhone: userUpdated?.contactPhone,
+        roles: userUpdated?.roles,
+        skills: userUpdated?.skills,
+        experience: userUpdated?.experience,
+        ratings: userUpdated?.ratings,
+        educations: userUpdated?.educations,
+        avatar: userUpdated?.avatar,
+        email: userUpdated?.email,
+        categories: userUpdated?.categories.map(uc => uc.category), // 🔹 Extraer solo las categorías
+      }
+    }
   }
 
   @Delete(':id')

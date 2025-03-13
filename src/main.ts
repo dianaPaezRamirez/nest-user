@@ -32,10 +32,9 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory); 
 
+
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors();
-  
-
 
   await app.listen(process.env.PORT ?? 3000);
 }

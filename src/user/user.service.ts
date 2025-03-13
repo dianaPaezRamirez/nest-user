@@ -96,6 +96,8 @@ export class UserService {
     return userFound
   }
 
+
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     const userUpdated= await this.prisma.user.update({
       where: { id: id },
@@ -108,6 +110,7 @@ export class UserService {
         roles: updateUserDto.roles,
         categories: updateUserDto.categories?
         { 
+          deleteMany: {},
           create: updateUserDto.categories?.map(categoriesId=>({
             category:{connect:{id:categoriesId}}
           })),}:undefined,
@@ -122,7 +125,15 @@ export class UserService {
         experience: updateUserDto.experience?{connect:updateUserDto.experience.map((experience)=>({id:experience}))}:undefined,
         ratings: updateUserDto.ratings?{connect:updateUserDto.ratings.map((rating)=>({id:rating}))}:undefined,
         avatar: updateUserDto.avatar
-      }
+      },
+      include: {
+        categories: {
+          include: { category: true },
+        },
+        educations: true,
+        experience: true,
+        ratings: true,
+      },
     })
     return userUpdated;
   }
