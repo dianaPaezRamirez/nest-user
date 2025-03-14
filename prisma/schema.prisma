@@ -32,7 +32,8 @@ model Category {
 
 model Educations {
   id        String           @id @default(cuid())
-  name      String           @unique
+  name      String
+  instituto String
   users     UserEducations[] // Relación con la tabla intermedia
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
@@ -49,15 +50,16 @@ model UserEducations {
 
 model Experience {
   id          String   @id @default(cuid())
-  titulo      String   @unique
+  titulo      String
   place       String
   startDate   DateTime
   endDate     DateTime
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  User        User?    @relation(fields: [userId], references: [id])
-  userId      String?
+  User        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String?
 }
 
 model Rating {

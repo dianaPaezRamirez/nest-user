@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'prisma.service';
@@ -26,7 +26,17 @@ export class UserService {
               }
             : undefined,
           skills: user.skills,
-          experience: user.experience?{connect:user.experience.map((experience)=>({id:experience}))}:undefined,
+          experience: user?.experience
+          ? {
+              create: user.experience.map((experience) => ({
+                titulo: experience.titulo, // 🔥 Agregar este campo obligatorio
+                place: experience.place,
+                startDate: new Date(experience.startDate), // Asegurar que sea Date
+                endDate:  new Date(experience.endDate) ,
+                description: experience.description,
+              })),
+            }
+          : undefined,
           ratings: user.ratings?{connect:user.ratings.map((rating)=>({id:rating}))}:undefined,
           avatar: user.avatar,
           categories: user.categories
@@ -88,10 +98,18 @@ export class UserService {
               }
             }
         },
-        educations: true,
+        educations: {
+          include: {
+            profession:{
+              select:{id:true,name:true}
+            } ,
+          },
+          omit: { userId: true,professionId:true }, // 🔹 Excluir el ID de Educations
+        },
         experience: true,
         ratings: true,
-    }
+    },
+    omit: { password: true }, // 🔹 Excluir la contraseña
   })
     return userFound
   }
@@ -99,38 +117,72 @@ export class UserService {
 
 
   async update(id: string, updateUserDto: UpdateUserDto) {
+    
+     // Asegurar que si el email ya existe, pertenece al mismo usuario
+  if (updateUserDto.email) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: updateUserDto.email },
+    });
+
+    if (existingUser && existingUser.id !== id) {
+      throw new BadRequestException({
+        status: 400,
+        message: 'El email ya está en uso por otro usuario',
+      });
+    }
+  }
+
     const userUpdated= await this.prisma.user.update({
       where: { id: id },
       data: {
-        email: updateUserDto.email,
-        name: updateUserDto.name,
-        lastName: updateUserDto.lastName,
-        password: updateUserDto.password,
-        contactPhone: updateUserDto.contactPhone,
-        roles: updateUserDto.roles,
-        categories: updateUserDto.categories?
+      ...(updateUserDto.email && { email: updateUserDto.email }), // Solo actualizar si existe
+      ...(updateUserDto.name && { name: updateUserDto.name }),
+      ...(updateUserDto.lastName && { lastName: updateUserDto.lastName }),
+      ...(updateUserDto.password && { password: updateUserDto.password }),
+      ...(updateUserDto.contactPhone && { contactPhone: updateUserDto.contactPhone }),
+      ...(updateUserDto.roles && { roles: updateUserDto.roles }),
+      ...(updateUserDto.categories && { categories: updateUserDto.categories?
         { 
           deleteMany: {},
           create: updateUserDto.categories?.map(categoriesId=>({
             category:{connect:{id:categoriesId}}
-          })),}:undefined,
-        educations: updateUserDto.educations
-          ? {
-              create: updateUserDto.educations.map(educationId => ({
-                profession: { connect: { id: educationId } } // Conecta educationId con Educations
-              })),
-            }
-          : undefined,
-        skills: updateUserDto.skills,
-        experience: updateUserDto.experience?{connect:updateUserDto.experience.map((experience)=>({id:experience}))}:undefined,
-        ratings: updateUserDto.ratings?{connect:updateUserDto.ratings.map((rating)=>({id:rating}))}:undefined,
-        avatar: updateUserDto.avatar
+          })),}:undefined,}),
+      ...( updateUserDto.educations && {  educations: updateUserDto.educations
+        ? {
+          deleteMany: {},
+            create: updateUserDto.educations.map(educationId => ({
+              profession: { connect: { id: educationId } } // Conecta educationId con Educations
+            })),
+          }
+        : undefined,}),
+      ...(updateUserDto.skills&&{skills:updateUserDto.skills}),
+      ...(updateUserDto.experience && { experience: updateUserDto.experience?{
+        deleteMany: {},
+        
+          create: updateUserDto.experience.map((experience) => ({
+            titulo: experience.titulo, 
+            place: experience.place,
+            startDate: new Date(experience.startDate),
+            endDate:  new Date(experience.endDate) ,
+            description: experience.description,
+          })),
+        
+      }:undefined,}),
+       ...(updateUserDto.ratings && { ratings: updateUserDto.ratings?{connect:updateUserDto.ratings.map((rating)=>({id:rating}))}:undefined,}),
+       ...(updateUserDto.avatar && {avatar: updateUserDto.avatar}),
       },
       include: {
         categories: {
           include: { category: true },
         },
-        educations: true,
+        educations: {
+          include: {
+            profession:{
+              select:{id:true,name:true}
+            } ,
+          },
+          omit: { userId: true,professionId:true }, // 🔹 Excluir el ID de Educations
+        },
         experience: true,
         ratings: true,
       },

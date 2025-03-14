@@ -59,6 +59,7 @@ export class UserController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update one' })
   async update(@Param('id') id: string, @Body(bcryptPasswordd) updateUserDto: UpdateUserDto) {
+    
     const userUpdated= await this.userService.update(id, updateUserDto)
     return {
       statusCode: 200,

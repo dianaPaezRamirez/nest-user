@@ -1,5 +1,7 @@
-import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from "class-validator" 
+import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, ValidateNested } from "class-validator" 
 import { IsEmailUnique } from "../validators/is-email-unique.validator"
+import { ExperienceDto } from "./experience.dto"
+import { Type } from "class-transformer"
 
 
 export class CreateUserDto {
@@ -29,7 +31,7 @@ export class CreateUserDto {
   @IsString({ each: true }) // Asegura que cada elemento es un string (IDs de roles)
   roles: string[]
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsArray()
   @IsString({ each: true })
   categories?: string[]
@@ -45,9 +47,9 @@ export class CreateUserDto {
   skills?: string[]
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  experience?: string[]
+  @ValidateNested({ each: true }) 
+  @Type(() => ExperienceDto)
+  experience?: ExperienceDto[]
 
   @IsOptional()
   @IsArray()

@@ -27,27 +27,4 @@ async login(user: any) {
   return { access_token: this.jwtService.sign(payload) };
 }
 
-
-/*  async validate(email: string, pass: string): Promise<any> {
-  const user = await this.prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) return null;
-
-  const isMatch = await bcrypt.compare(pass, user.password);
-  if (!isMatch) return null;
-
-  const { password, ...result } = user;
-  return result;
-} */
-
-/*   async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
-
-    console.log(payload)
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
-  } */
 }
