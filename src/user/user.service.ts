@@ -117,7 +117,7 @@ export class UserService {
 
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    
+    console.log("thone")
      // Asegurar que si el email ya existe, pertenece al mismo usuario
   if (updateUserDto.email) {
     const existingUser = await this.prisma.user.findUnique({
