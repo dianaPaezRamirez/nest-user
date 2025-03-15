@@ -2,16 +2,26 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query,
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { bcryptPasswordd } from './pipe/bcrypt-password.pipe';
+import { User } from './entities/user.entity';
 
-
+@ApiTags('users') // Agrupa las rutas bajo la categoría 'users'
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create user' })
+  @ApiResponse({
+    status: 200,
+    description: 'The found record',
+    type: User,
+  })
+  @ApiBody({
+    description: 'User data for creation',
+    type: CreateUserDto,
+  })
   async create(@Body(bcryptPasswordd) createUser: CreateUserDto) {
     return this.userService.create(createUser);
   }
